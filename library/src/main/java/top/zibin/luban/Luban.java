@@ -25,6 +25,7 @@ public class Luban implements Handler.Callback {
   private static final int MSG_COMPRESS_SUCCESS = 0;
   private static final int MSG_COMPRESS_START = 1;
   private static final int MSG_COMPRESS_ERROR = 2;
+  private static final int MSG_COMPRESS_complete = 3;
 
   private String mTargetDir;
   private boolean focusAlpha;
@@ -61,6 +62,8 @@ public class Luban implements Handler.Callback {
     if (TextUtils.isEmpty(mTargetDir)) {
       mTargetDir = getImageCacheDir(context).getAbsolutePath();
     }
+    File folder = new File(mTargetDir);
+    if (!folder.exists() || !folder.isDirectory()) folder.mkdirs();
 
     String cacheBuilder = mTargetDir + "/" +
         System.currentTimeMillis() +
@@ -145,6 +148,12 @@ public class Luban implements Handler.Callback {
 
       iterator.remove();
     }
+    AsyncTask.SERIAL_EXECUTOR.execute(new Runnable() {
+      @Override
+      public void run() {
+          mHandler.sendMessage(mHandler.obtainMessage(MSG_COMPRESS_complete));
+      }
+    });
   }
 
   /**
@@ -217,6 +226,9 @@ public class Luban implements Handler.Callback {
         break;
       case MSG_COMPRESS_ERROR:
         mCompressListener.onError((Throwable) msg.obj);
+        break;
+      case MSG_COMPRESS_complete:
+        mCompressListener.onComplete();
         break;
     }
     return false;

@@ -11,6 +11,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,6 +22,7 @@ import com.bumptech.glide.Glide;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import butterknife.BindView;
@@ -68,7 +70,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         initPersission();
     }
 
-    @OnClick({R.id.btn_take_photo, R.id.btn_open})
+    @OnClick({R.id.btn_take_photo, R.id.btn_open,R.id.btn_compress})
     public void onViewClicked(View view) {
         switch (view.getId()) {
             case R.id.btn_take_photo:
@@ -85,6 +87,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 Intent intent1 = new Intent(Intent.ACTION_PICK, null);
                 intent1.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*");
                 startActivityForResult(intent1, PHOTO);
+                break;
+            case R.id.btn_compress:
+                compressFiles();
                 break;
         }
     }
@@ -173,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 .load(file.getAbsoluteFile())
                 .ignoreBy(100)
                 .setQuality(qualty)
-                .setTargetDir(getExternalFilesDir("imageCache").getAbsolutePath())
+                .setTargetDir(Environment.getExternalStorageDirectory().getAbsolutePath() + "/luban/")
                 .filter(new CompressionPredicate() {
                     @Override
                     public boolean apply(String path) {
@@ -199,6 +204,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     @Override
                     public void onError(Throwable e) {
                         // TODO 当压缩过程出现问题时调用
+                        tvChange.setText(e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        //todo 当压缩全部完成的时候
+
                     }
                 }).launch();
     }
@@ -307,4 +319,49 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         return result4.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString() + "TB";
     }
 
+    private void compressFiles(){
+        List<File> files = new ArrayList<>();
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191107_153742.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191111_102209.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191111_101008.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191111_100850.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191107_153745.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191101_150735.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191101_1150523.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191101_145901.jpg"));
+        files.add(new File(Environment.getExternalStorageDirectory().getAbsolutePath()+"/DCIM/camera/IMG_20191111_102949.jpg"));
+        Log.e("rrrrrrrrrrrrrrrrr","压缩开始");
+        Luban.with(this)
+                .load(files)
+                .ignoreBy(60)
+                .setQuality(100)
+                .setTargetDir(Environment.getExternalStorageDirectory().getAbsolutePath() + "/luban/")
+                .filter(new CompressionPredicate() {
+                    @Override
+                    public boolean apply(String path) {
+                        return !(TextUtils.isEmpty(path) || path.toLowerCase().endsWith(".gif"));
+                    }
+                })
+                .setCompressListener(new OnCompressListener() {
+                    @Override
+                    public void onStart() {
+
+                    }
+
+                    @Override
+                    public void onSuccess(File file) {
+                        Log.e("rrrrrrrrrrrrrrrrr","压缩成功："+file.getAbsolutePath());
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e("rrrrrrrrrrrrrrrrr","压缩失败："+e.getMessage());
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.e("rrrrrrrrrrrrrrrrr","压缩完成");
+                    }
+                }).launch();
+    }
 }

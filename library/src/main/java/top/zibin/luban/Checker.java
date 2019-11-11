@@ -143,7 +143,7 @@ enum Checker {
       BitmapFactory.Options options = new BitmapFactory.Options();
       options.inJustDecodeBounds = true;
       BitmapFactory.decodeStream(input.open(), null, options);
-      return options.outMimeType.replace("image/", ".");
+      return  options.outMimeType.replace("image/", ".").replace("jpeg", "jpg");
     } catch (Exception e) {
       return JPG;
     }
